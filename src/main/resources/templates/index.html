@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitor</title>
+</head>
+
+<!-- 将body的margin置为0，确保图片能贴着窗口上边缘显示 -->
+<body style="margin: 0">
+
+<!-- 该div用于显示当前机器的屏幕截屏；注意这里不是使用img标签，而是通过背景图片的方式来显示图片 -->
+<div id="imgFrame" onclick="onClickOrTouch()"></div>
+
+</body>
+
+<script>
+
+    // 将http协议升级为websocket协议时的url地址
+    var WEBSOCKET_URL = "[[${ws_url}]]";
+
+    // 用于判断浏览器所在设备是手机还是电脑；浏览器宽度低于该值时为手机，否则为电脑
+    var PHONE_AND_COMPUTER_WIDTH_SPLIT_LINE = 1300;
+
+    // 如果是手机/电脑，则相框的宽度应该等于多少倍的浏览器宽度
+    var PHONE_WIDTH_FACTOR = 0.95, COMPUTER_WIDTH_FACTOR = 0.85;
+
+    // 相框的宽高比
+    var WIDTH_HEIGHT_RATIO = 16 / 9;
+
+    // 获取到两个常用的元素
+    var imgFrame = document.getElementById('imgFrame');
+    var imgFrameStyle = imgFrame.style;
+
+    // 获取到浏览器的宽度，并以此计算相框的宽度和高度
+    var windowWidth = window.innerWidth;
+    var imgFrameWidth = windowWidth * (windowWidth >= PHONE_AND_COMPUTER_WIDTH_SPLIT_LINE ? COMPUTER_WIDTH_FACTOR : PHONE_WIDTH_FACTOR);
+    var imgFrameHeight = imgFrameWidth / WIDTH_HEIGHT_RATIO;
+
+    // 设置相框的宽和高，并水平居中显示
+    imgFrameStyle.margin = '0 auto';
+    imgFrameStyle.width = imgFrameWidth + 'px';
+    imgFrameStyle.height = imgFrameHeight + 'px';
+
+    // 计算相框左上角的坐标
+    var topOffset = 0;
+    var leftOffset = (windowWidth - imgFrameWidth) / 2;
+
+    // 相框背景图片不重复显示，并且宽度等于相框的宽度
+    imgFrameStyle.backgroundRepeat = 'no-repeat';
+    imgFrameStyle.backgroundSize = imgFrameWidth + 'px';
+
+    // websocket相关的代码
+    var socket;
+    if(window.WebSocket){
+        socket = new WebSocket(WEBSOCKET_URL);
+
+        // 连接成功后，打印日志信息
+        socket.onopen = function(event){
+            console.log('Websocket open: ' + event);
+        };
+
+        // 每次收到服务器的屏幕截图（用BASE64形式传输），就将该图片显示出来
+        socket.onmessage = function(event) {
+            imgFrameStyle.backgroundImage = 'url(data:image/png;base64,' + event.data;
+        };
+
+        // 打印错误信息
+        socket.onerror = function (event) {
+            alert('Error occur: ' + event);
+        };
+
+        // 关闭连接时弹出对话框来提示
+        socket.onclose = function(event) {
+            alert('WebSocket close: ' + event);
+        }
+    } else{
+        alert('Your browser do not support websocket!');
+    }
+
+    // 每次点击图片，就调用一次该方法
+    function onClickOrTouch(){
+
+        // 获取到点击处的坐标(x, y)，并计算出点击处相对于图片左上角的坐标(x - leftOffset, y - topOffset)
+        // 它的横纵坐标分别除以图片的宽高，即可计算出浏览器点击的位置相当于服务器屏幕的哪个位置
+        // 将该信息发送给服务器，以便于让服务器去点击相应的位置
+        socket.send('click:' + (event.clientX - leftOffset) / imgFrameWidth  + ',' + (event.clientY - topOffset) / imgFrameHeight);
+
+        // 由于服务器无法实时将屏幕截图返回给客户端，因此这里显示出点击的特效，告知用户点击命令已经发送了
+        clickFallback(event);
+    }
+
+    // 显示点击特效（心形图案）
+    function clickFallback(event) {
+        var heart = document.createElement('b');
+        heart.onselectstart = new Function('event.returnValue = false');
+        heart.style.cssText = 'position: fixed; left: -100%;';
+        document.body.appendChild(heart).innerHTML = '❤';
+
+        // 这几个变量分别代表字体大小、横坐标、纵坐标、颜色、透明度、放大缩小
+        var f = 16, x = event.clientX - f / 2, y = event.clientY - f, c = randomColor(), a = 1, s = 1.2;
+
+        // 定时器
+        var timer = setInterval(function() {
+            if (a <= 0) {
+                document.body.removeChild(heart);
+                clearInterval(timer);
+            } else {
+                heart.style.cssText = 'font-size: 16px; cursor: default; position: fixed; color: ' + c + '; left: ' + x + 'px; top: ' + y + 'px; opacity: ' + a + '; transform: scale(' + s + ');';
+                y--;
+                a -= 0.016;
+                s += 0.002;
+            }
+        }, 12);
+    }
+
+    // 随机颜色
+    function randomColor() {
+        return 'rgb(' + (~~(Math.random() * 255)) + ',' + (~~(Math.random() * 255)) + ',' + (~~(Math.random() * 255)) + ')';
+    }
+</script>
+</html>
