@@ -47,7 +47,6 @@ public class WsServer {
             } finally {
                 close();
             }
-
         }).start();
     }
 

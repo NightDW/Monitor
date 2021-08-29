@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
  *
  * @author NightDW 2021/8/28 18:29
  */
+@Slf4j
 @Component
 @ChannelHandler.Sharable
 public class WsHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
@@ -33,6 +35,7 @@ public class WsHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
      */
     public void handlerAdded(ChannelHandlerContext ctx) {
         channels.add(ctx.channel());
+        log.info("{}: join!", ctx.channel().remoteAddress());
         spider.switchToFastModeTemporarily();
     }
 
@@ -41,19 +44,31 @@ public class WsHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
      */
     public void handlerRemoved(ChannelHandlerContext ctx) {
         channels.remove(ctx.channel());
+        log.info("{}: left!", ctx.channel().remoteAddress());
+    }
+
+    /**
+     * 出现异常时打印异常信息，并移除该通道
+     */
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        channels.remove(ctx.channel());
+        log.info("{}: {}", ctx.channel().remoteAddress(), cause.getMessage());
     }
 
     /**
      * 客户端发送指令过来时，执行该指令；指令格式为"cmdType:cmdContent"
      */
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) {
-        String[] split = msg.text().split(":");
+        String text = msg.text();
+        log.debug("{}: {}", ctx.channel().remoteAddress(), text);
+
+        String[] split = text.split(":");
 
         // 目前只支持鼠标点击的指令
         if ("click".equals(split[0])) {
-            this.doClickCmd(split[1]);
+            doClickCmd(split[1]);
         } else {
-            System.err.println("Unsupported command: " + split[1]);
+            log.error("Unsupported command: {}", split[1]);
         }
 
         // 让spider线程暂时进入快速模式

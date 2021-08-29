@@ -29,7 +29,7 @@ public class IocConfig {
     }
 
     /**
-     * 创建一个ChannelGroup，用于指定向哪些客户端发送服务器的屏幕截图
+     * 创建一个ChannelGroup，所有客户端的websocket连接都将存放在这里
      */
     @Bean
     public ChannelGroup channelGroup() {

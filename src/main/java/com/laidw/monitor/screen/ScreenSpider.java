@@ -86,8 +86,8 @@ public class ScreenSpider extends Thread {
      * 暂时切换到快速模式；快速模式次数减小为0后将恢复到正常模式
      */
     public void switchToFastModeTemporarily(){
-        interrupt(); // 线程可能正在休眠，因此需要立即唤醒该线程，让该线程立即发送截图
         remainFastRefreshTimes = screenProperties.getFastRefreshTimes();
+        interrupt(); // 线程可能正在休眠，因此需要立即唤醒该线程，让该线程立即发送截图
     }
 
     /**

@@ -33,5 +33,5 @@ public class ScreenProperties {
     /**
      * 快速模式下，截屏发送次数达到该值后，将回到正常模式
      */
-    private int fastRefreshTimes = 10;
+    private int fastRefreshTimes = 20;
 }

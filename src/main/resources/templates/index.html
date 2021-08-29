@@ -19,13 +19,13 @@
     var WEBSOCKET_URL = "[[${ws_url}]]";
 
     // 用于判断浏览器所在设备是手机还是电脑；浏览器宽度低于该值时为手机，否则为电脑
-    var PHONE_AND_COMPUTER_WIDTH_SPLIT_LINE = 1300;
+    var WIDTH_SPLIT_LINE = [[${width_split_line}]];
 
     // 如果是手机/电脑，则相框的宽度应该等于多少倍的浏览器宽度
-    var PHONE_WIDTH_FACTOR = 0.95, COMPUTER_WIDTH_FACTOR = 0.85;
+    var PHONE_WIDTH_FACTOR = [[${phone_width_ratio}]], COMPUTER_WIDTH_FACTOR = [[${computer_width_ratio}]];
 
     // 相框的宽高比
-    var WIDTH_HEIGHT_RATIO = 16 / 9;
+    var WIDTH_HEIGHT_RATIO = [[${width_height_ratio_w}]] / [[${width_height_ratio_h}]];
 
     // 获取到两个常用的元素
     var imgFrame = document.getElementById('imgFrame');
@@ -33,7 +33,7 @@
 
     // 获取到浏览器的宽度，并以此计算相框的宽度和高度
     var windowWidth = window.innerWidth;
-    var imgFrameWidth = windowWidth * (windowWidth >= PHONE_AND_COMPUTER_WIDTH_SPLIT_LINE ? COMPUTER_WIDTH_FACTOR : PHONE_WIDTH_FACTOR);
+    var imgFrameWidth = windowWidth * (windowWidth >= WIDTH_SPLIT_LINE ? COMPUTER_WIDTH_FACTOR : PHONE_WIDTH_FACTOR);
     var imgFrameHeight = imgFrameWidth / WIDTH_HEIGHT_RATIO;
 
     // 设置相框的宽和高，并水平居中显示

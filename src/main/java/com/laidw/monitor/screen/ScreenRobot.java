@@ -1,8 +1,11 @@
 package com.laidw.monitor.screen;
 
+import com.laidw.monitor.controller.IndexProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.image.BufferedImage;
@@ -12,6 +15,7 @@ import java.awt.image.BufferedImage;
  *
  * @author NightDW 2021/8/28 18:19
  */
+@Slf4j
 @Component
 public class ScreenRobot {
 
@@ -20,6 +24,9 @@ public class ScreenRobot {
      */
     @Autowired
     private Robot robot;
+
+    @Autowired
+    private IndexProperties indexProperties;
 
     /**
      * 按下按键后，间隔多长时间再松开按键
@@ -42,10 +49,18 @@ public class ScreenRobot {
      * 方法私有，也就是说暂不支持自定义屏幕范围
      */
     private ScreenRobot(Rectangle rectangle) {
-        if (Math.abs(rectangle.getHeight() * 16 - rectangle.getWidth() * 9) >= 8) {
-            System.err.println("Width and height ratio is not 16:9, so it may cause some problems!");
-        }
         this.rectangle = rectangle;
+    }
+
+    /**
+     * 构造完成后，检查宽高比是否符合要求；允许有一定的误差
+     */
+    @PostConstruct
+    public void checkWidthHeightRatio(){
+        int w = indexProperties.getWidthHeightRatioW(), h = indexProperties.getWidthHeightRatioH();
+        if (Math.abs(rectangle.getHeight() * w - rectangle.getWidth() * h) >= 8) {
+            log.warn("Width and height ratio is not {}:{}, so it may cause some problems!", w, h);
+        }
     }
 
     /**
